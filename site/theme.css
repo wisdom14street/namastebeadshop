@@ -1,0 +1,6 @@
+:root{--ink:#4a1420;--onink:#fdf6e9;--paper:#fdf6e9;--card:#fffdf7;--soft:#f9e8c4;--muted:#6a4b4f;--line:#ecdcc0;--accent:#e8a317;--onaccent:#3a0f19;--accentdark:#9b5b00;--focus:#1f6b8a;
+--display:Lora,Georgia,serif;--body:Mulish,system-ui,-apple-system,"Segoe UI",sans-serif;--r:8px;--btnr:6px}
+.hero{background:repeating-radial-gradient(circle at 85% 40%,#e8a31714 0 2px,transparent 3px 26px),linear-gradient(170deg,#3a0f19,#5b1a28 60%,#3a0f19);border-bottom:6px double #e8a317}
+.hero-in{grid-template-columns:1fr!important;text-align:center;justify-items:center}.hero .cta{justify-content:center}.collage{grid-template-columns:repeat(4,1fr);max-width:900px}.collage img{border-radius:50%;transform:none!important}
+.hero h1 em{font-style:italic;color:#f5c555}.sechead h2:before{content:"\25CF\25CF\25CF ";color:var(--accent);font-size:.5em;vertical-align:middle;letter-spacing:.2em}
+.bar{background:#e8a317;color:#3a0f19}.whys li{border-left-color:#4a1420}

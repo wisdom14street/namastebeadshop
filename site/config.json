@@ -1,0 +1,17 @@
+{
+  "brand": "Namaste Bead Shop",
+  "short_name": "Bead Shop",
+  "site_url": "https://namastebeadshop.com",
+  "storefront": "Namaste Bead Shop",
+  "REVIEW_URL": "",
+  "GOOGLE_SITE_VERIFICATION": "",
+  "store_type": "Store",
+  "price_range": "$$",
+  "icon": "mala",
+  "layout": "l-mala",
+  "kinds": ["mala", "beaded", "meditation", "necklace", "bracelet"],
+  "best_collections": ["meditation-tools", "crystal-bead-bracelets", "chakra-bracelets", "brass-singing-bowls"],
+  "siblings": [["Namaste Beads: every beaded bracelet", "https://namastebeads.com/"], ["Namaste Bead Store: bracelets by stone", "https://namastebeadstore.com/"], ["Namaste Incense Shop: ritual & smudge", "https://namasteincenseshop.com/"], ["Namaste Jewelry Shop", "https://namastejewelryshop.com/"]],
+  "theme": {"ink": "#4a1420", "paper": "#fdf6e9", "accent": "#e8a317",
+            "fonts": "https://fonts.googleapis.com/css2?family=Lora:wght@500;700&family=Mulish:wght@400;600;700&display=swap"}
+}
