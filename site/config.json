@@ -13,5 +13,6 @@
   "best_collections": ["meditation-tools", "crystal-bead-bracelets", "chakra-bracelets", "brass-singing-bowls"],
   "siblings": [["Namaste Beads: every beaded bracelet", "https://namastebeads.com/"], ["Namaste Bead Store: bracelets by stone", "https://namastebeadstore.com/"], ["Namaste Incense Shop: ritual & smudge", "https://namasteincenseshop.com/"], ["Namaste Jewelry Shop", "https://namastejewelryshop.com/"]],
   "theme": {"ink": "#4a1420", "paper": "#fdf6e9", "accent": "#e8a317",
-            "fonts": "https://fonts.googleapis.com/css2?family=Lora:wght@500;700&family=Mulish:wght@400;600;700&display=swap"}
+            "fonts": "https://fonts.googleapis.com/css2?family=Lora:wght@500;700&family=Mulish:wght@400;600;700&display=swap"},
+ "GA_MEASUREMENT_ID": "G-Y7R5K9NMW0"
 }
