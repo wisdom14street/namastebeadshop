@@ -31,6 +31,7 @@ GA_HEAD = '' if (PREVIEW or not GA_ID) else (f'<script async src="https://www.go
     f'<script>window.dataLayer=window.dataLayer||[];function gtag(){{dataLayer.push(arguments);}}gtag("js",new Date());gtag("config","{GA_ID}",' + json.dumps({'site_brand': BRAND}).replace('</', '<\\/') + ');</script>')
 GA_FOOT = '<script src="/assets/ga.js" defer></script>' if GA_HEAD else ''
 CART_DOMAIN = SITE.split('://', 1)[-1].split('/')[0].removeprefix('www.')
+BOOKSHOP_LINK = SHOP + '/?ref=' + CART_DOMAIN.split('.')[0]
 def single_vid(x):
     """variant id when a card can go straight to the cart (one listing, one in-stock option), else 0"""
     av = [v for v in x['variants'] if v['available']]
@@ -148,7 +149,7 @@ for k, v in dict(BRAND=BRAND, LEGAL=LEGAL, SITE=SITE, SHOP=SHOP, STORE_STREET=ST
                  cat_count=cat_count, fam_count=fam_count, brand_count=brand_count, style_count=style_count, AISLES=AISLES,
                  AISLE_KEYS=AISLE_KEYS, FAM_NAME=FAM_NAME, BRAND_NAME=BR.NAME, FACTS=BR.FACTS, products=products, leaders=leaders,
                  by_rank=by_rank, HAS_RANK=HAS_RANK, metal_count=metal_count, stone_any=stone_any, intent_count=intent_count, kind_count=kind_count,
-                 STONE_NAME=ST.STONE_NAME, INTENT_NAME=ST.INTENT_NAME, INTENTS=ST.INTENTS, NON_STONE=ST.NON_STONE, CFG=CFG).items():
+                 STONE_NAME=ST.STONE_NAME, INTENT_NAME=ST.INTENT_NAME, INTENTS=ST.INTENTS, NON_STONE=ST.NON_STONE, CFG=CFG, BOOKSHOP_LINK=BOOKSHOP_LINK).items():
     setattr(S, k, v)
 S.MIN_PRICE = min(x['price'] for x in products)
 S.MIN_STICK = S.MIN_PRICE
@@ -183,6 +184,20 @@ def match(x, f):
     if f.get('nq') and re.search(f['nq'], x['title'], re.I): return False
     return True
 S.match = match
+
+# Navigation must use the same inventory thresholds as the generated pages.
+LANDINGS = C.LANDINGS(S)
+CATALOG_PATHS = {'/shop/'} | {f'/shop/{AISLES[k][2]}/' for k in AISLE_KEYS}
+CATALOG_PATHS |= {p['path'] for p in LANDINGS if any(match(x, p['filter']) for x in products)}
+CATALOG_PATHS |= {f'/stones/{k}/' for k in S.STONE_KEYS} | {f'/intentions/{k}/' for k in S.INTENT_KEYS}
+if S.STONE_KEYS: CATALOG_PATHS.add('/stones/')
+if S.INTENT_KEYS: CATALOG_PATHS.add('/intentions/')
+def catalog_link_available(href):
+    path = href.split('?', 1)[0].split('#', 1)[0]
+    if path.startswith(('/shop/', '/stones/', '/intentions/')) or path in {p['path'] for p in LANDINGS}:
+        return path in CATALOG_PATHS
+    return True
+S.catalog_link_available = catalog_link_available
 
 # ---------- html helpers ----------
 def hours_html():
@@ -233,10 +248,10 @@ def nav():
 <nav class="links" id="mainnav" aria-label="Main"><a href="/visit/" class="vlink">Visit</a><a href="/shop/">Shop all</a>{links}{'<a href="/stones/">Stones</a>' if S.STONE_KEYS else ''}{'<a href="/intentions/">Intentions</a>' if S.INTENT_KEYS and C.NAV_INTENTS else ''}<a href="/brands/">Brands</a>{f'<a href="/{C.QUIZ["slug"]}/">{E(C.QUIZ["nav"])}</a>' if C.QUIZ else ''}</nav></div></header>'''
 def footer():
     sib = ''.join(f'<a href="{u}" rel="noopener">{E(n)}</a>' for n, u in CFG.get('siblings', []))
-    expl = ''.join(f'<a href="{u}">{E(n)}</a>' for n, u in C.FOOTER_EXPLORE(S))
+    expl = ''.join(f'<a href="{u}">{E(n)}</a>' for n, u in C.FOOTER_EXPLORE(S) if catalog_link_available(u))
     return f'''<footer class="foot"><div class="wrap grid4">
 <div><a class="logo light" href="/">{logo()}</a><p class="legal">{LEGAL}</p><p class="small">{E(C.FOOT_BLURB)}</p><p class="small findnote">{P2C["foot"]} <a href="/visit/">How to find us &rarr;</a></p>
-<p class="small">Orders are checked out on Shopify through namastebookshop.com, which processes payment and ships from New York City.</p></div>
+<p class="small">Orders are checked out on Shopify through <a class="bookshop-link" href="{E(BOOKSHOP_LINK)}" rel="noopener">Namaste Bookshop</a>, which processes payment and ships from New York City.</p></div>
 <div><h2 class="fh">Shop</h2>{''.join(f'<a href="/shop/{AISLES[k][2]}/">{E(AISLES[k][0])}</a>' for k in AISLE_KEYS)}<a href="/brands/">Brands A&ndash;Z</a></div>
 <div><h2 class="fh">Explore</h2>{expl}<a href="/faq/">FAQ</a></div>
 <div><h2 class="fh">Visit</h2><p class="small foottxt">{STORE_ADDR}</p>{''.join(f'<p class="small foottxt">{d}: {h}</p>' for d, h in HOURS)}<a href="tel:{TEL}">Call {PHONE}</a><a href="{DIRECTIONS}" rel="noopener" target="_blank">Get directions</a><a href="/visit/">Visit &amp; pickup info</a>
@@ -253,7 +268,7 @@ def page(path, title, desc, body, extra_head='', canonical=True, index=True, og_
     gsv = f'<meta name="google-site-verification" content="{E(GSV)}">' if GSV and path == '/' else ''
     doc = f'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">{GA_HEAD}
 <title>{E(title)}</title><meta name="description" content="{E(desc)}">{robots}{gsv}{f'<link rel="canonical" href="{url}">' if canonical else ''}
-<meta property="og:site_name" content="{E(BRAND)}"><meta property="og:type" content="website"><meta property="og:title" content="{E(title)}"><meta property="og:description" content="{E(desc)}"><meta property="og:url" content="{url}"><meta property="og:image" content="{E(ogi)}">{ogx}{ogx}
+<meta property="og:site_name" content="{E(BRAND)}"><meta property="og:type" content="website"><meta property="og:title" content="{E(title)}"><meta property="og:description" content="{E(desc)}"><meta property="og:url" content="{url}"><meta property="og:image" content="{E(ogi)}">{ogx}
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="{E(title)}"><meta name="twitter:description" content="{E(desc)}"><meta name="twitter:image" content="{E(ogi)}">
 <meta name="theme-color" content="{CFG['theme']['ink']}"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/icon-192.png" sizes="192x192" type="image/png"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/site.webmanifest">
 <link rel="preconnect" href="https://cdn.shopify.com"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="{CFG['theme']['fonts']}" rel="stylesheet">
@@ -288,6 +303,7 @@ def p2_badges(compact=False):
 def p2_chips():
     out = []
     for label, href, f in P2C['chips']:
+        if not catalog_link_available(href): continue
         n = sum(1 for x in products if match(x, f)) if f else 0
         if f and not n: continue
         out.append(f'<a class="chip" href="{href}">{E(label)}{f" <small>{n}</small>" if n else ""}</a>')
@@ -323,7 +339,7 @@ def p2_instore(x): return f'<p class="instore">{INSTORE_LINE}. <a href="/visit/"
 def p2_sticky(x, v0):
     return (f'<div class="stickybuy" role="region" aria-label="Quick add to cart"><div><span class="sbt">{E(x["title"])}</span><b data-sb-price>{money(v0["price"])}</b></div>'
             f'<button type="button" class="btn">Add to cart</button></div>')
-def p2_popular(): return '<nav class="wrap popular" aria-label="Popular on this site"><b>Popular:</b>' + ''.join(f'<a href="{h}">{E(l)}</a>' for l, h in P2C['popular']) + '</nav>'
+def p2_popular(): return '<nav class="wrap popular" aria-label="Popular on this site"><b>Popular:</b>' + ''.join(f'<a href="{h}">{E(l)}</a>' for l, h in P2C['popular'] if catalog_link_available(h)) + '</nav>'
 def p2_visit():
     c = P2C
     walk = lambda steps: '<ol class="walk">' + ''.join(f'<li>{s}</li>' for s in steps) + '</ol>'
@@ -400,6 +416,7 @@ compact = [{'h': x['handle'], 't': x['title'], 'c': x['aisle'], 'k': x['base'], 
             'g': 1 if x['gift'] else 0, 'r': round(min(y['rank'] for y in x['group']), 4), 'd': max(y['created'] for y in x['group'])[:10]} for x in leaders]
 json.dump(compact, open(os.path.join(DIST, 'data', 'catalog.json'), 'w'), separators=(',', ':'))
 json.dump({'aisles': {k: {'name': AISLES[k][0], 'slug': AISLES[k][2], 'color': AISLES[k][4]} for k in AISLE_KEYS}, 'fams': {k: FAM_NAME[k] for k in stone_any},
+           'stone_pages': S.STONE_KEYS,
            'labels': C.LABELS,
            'brands': {k: BR.NAME[k] for k in brand_count}, 'built': datetime.datetime.now().isoformat(timespec='minutes')},
           open(os.path.join(DIST, 'data', 'meta.json'), 'w'))
@@ -416,6 +433,7 @@ def section(sec):
     if t == 'collections':
         tiles = ''
         for it in sec['items']:
+            if not catalog_link_available(it['href']): continue
             pool = by_rank(photo([x for x in leaders if match(x, it['filter'])]))
             if not pool: continue
             tiles += f'''<a class="coll" href="{it['href']}"><img loading="lazy" src="{img(pool[0]['images'][0],500)}" srcset="{srcset(pool[0]['images'][0],(300,500))}" sizes="(min-width:900px) 30vw,50vw" alt="" width="500" height="500"><div><h3>{E(it['title'])}</h3><p>{E(it['blurb'])}</p><span>{sum(1 for x in products if match(x, it['filter']))} items &rarr;</span></div></a>'''
@@ -423,7 +441,7 @@ def section(sec):
     if t == 'grid':
         xs = sec['select'](S)
         if not xs: return ''
-        return f'<section class="wrap"><div class="sechead"><h2>{E(sec["title"])}</h2>{f"<a href=\"{sec["href"]}\">{E(sec["link"])} &rarr;</a>" if sec.get("href") else ""}</div>{f"<p class=\"intro\">{sec["intro"]}</p>" if sec.get("intro") else ""}{grid(xs)}</section>'
+        return f'<section class="wrap"><div class="sechead"><h2>{E(sec["title"])}</h2>{f"<a href=\"{sec["href"]}\">{E(sec["link"])} &rarr;</a>" if sec.get("href") and catalog_link_available(sec["href"]) else ""}</div>{f"<p class=\"intro\">{sec["intro"]}</p>" if sec.get("intro") else ""}{grid(xs)}</section>'
     if t == 'brands':
         chips = ''.join(f'<a class="chip" href="/brands/{k}/">{E(BR.NAME[k])} <small>{n}</small></a>' for k, n in brand_count.most_common(sec.get('n', 12)))
         return f'<section class="wrap"><div class="sechead"><h2>{E(sec["title"])}</h2><a href="/brands/">Brands A&ndash;Z &rarr;</a></div><div class="chips">{chips}</div></section>'
@@ -436,8 +454,9 @@ def section(sec):
         return f'<section class="band"><div class="wrap band-in"><div><h2>{E(sec["title"])}</h2><p>{sec["text"](S)}</p>{visit_buttons(True)}</div><ol class="steps">{steps}</ol></div></section>'
     return ''
 H = C.HERO(S)
+home_cta = P2C['cta'] if catalog_link_available(P2C['cta'][1]) else ('Shop all malas & tools', '/shop/')
 home = f'''<section class="hero"><div class="wrap hero-in"><div class="htext"><p class="eyebrow">{H['eyebrow']}</p><h1>{H['h1']}</h1><p class="lede">{H['lede']}</p>
-<div class="cta"><a class="btn" href="{P2C['cta'][1]}">{E(P2C['cta'][0])} &rarr;</a><a class="btn ghost" href="/visit/">How to find us</a><a class="btn ghost" href="{DIRECTIONS}" rel="noopener" target="_blank">Directions</a></div><p class="heroloc">{P2C['heroloc']}</p></div>{collage()}</div></section>
+<div class="cta"><a class="btn" href="{home_cta[1]}">{E(home_cta[0])} &rarr;</a><a class="btn ghost" href="/visit/">How to find us</a><a class="btn ghost" href="{DIRECTIONS}" rel="noopener" target="_blank">Directions</a></div><p class="heroloc">{P2C['heroloc']}</p></div>{collage()}</div></section>
 {p2_home_top()}{''.join(section(s) for s in C.HOME_SECTIONS[:2])}{p2_gift()}{''.join(section(s) for s in C.HOME_SECTIONS[2:])}'''
 page('/', C.HOME_TITLE(S), C.HOME_DESC(S), home, ldjson({"@context": "https://schema.org", "@type": "WebSite", "name": BRAND, "url": SITE + '/',
      "potentialAction": {"@type": "SearchAction", "target": SITE + "/shop/?q={search_term_string}", "query-input": "required name=search_term_string"}}) + ldjson(store_ld()))
@@ -465,7 +484,7 @@ shop_page('/shop/', C.SHOP_TITLE(S), C.SHOP_DESC(S), C.SHOP_H1, C.SHOP_SUB(S), c
 for k in AISLE_KEYS:
     a = AISLES[k]
     shop_page(f'/shop/{a[2]}/', C.AISLE_TITLE(S, k), C.AISLE_DESC(S, k), a[0], a[3], {'aisle': [k]}, crumbs=[('Home', '/'), ('Shop', '/shop/'), (a[0], f'/shop/{a[2]}/')])
-for L in C.LANDINGS(S):
+for L in LANDINGS:
     if any(match(x, L['filter']) for x in products):
         shop_page(L['path'], L['title'], L['desc'], L['h1'], L['sub'], L['filter'], L.get('intro', ''), crumbs=[('Home', '/'), (L['h1'], L['path'])])
 

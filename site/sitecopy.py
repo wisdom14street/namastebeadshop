@@ -150,7 +150,7 @@ def ABOUT(S):
     return f'''<p class="lead">Namaste Bead Shop is our corner for practice at {S.STORE_ADDR}: full malas, wrist malas, prayer bracelets and the bowls and bells that go with them.</p>
 <p>We keep it focused so it is easier to choose: 108-bead malas in one aisle, wrist malas in another, seed and wood in their own, and sound tools last.{" Reserve online and choose Pickup at checkout." if S.PICKUP_ON else ""}</p>
 <h2>Visit</h2><p>{S.STORE_ADDR}. Call <a href="tel:{S.TEL}">{S.PHONE}</a>.</p>{S.hours_html()}{S.visit_buttons()}
-<h2>Who we are</h2><p>{S.LEGAL} Orders are processed on Shopify through <a href="{S.SHOP}" rel="noopener">namastebookshop.com</a>.</p>
+<h2>Who we are</h2><p>{S.LEGAL} Orders are processed on Shopify through <a href="{S.BOOKSHOP_LINK}" rel="noopener">Namaste Bookshop</a>.</p>
 <h2>A note on tradition</h2><p>Our guides describe how malas are commonly used in Hindu, Buddhist and yoga practice, and the meanings traditions give to stones. We share them respectfully and for interest; they are not medical advice.</p>'''
 VISIT_TITLE = 'Visit Our Mala Shop near Union Square'
 def VISIT_DESC(S): return f'Hours, directions and pickup for Namaste Bead Shop at {S.STORE_ADDR}.'
@@ -165,9 +165,12 @@ def FAQ(S):
             ('Can I wear a mala as a necklace?', 'Many people do. Some traditions keep a practice mala private; it is your choice.'),
             ('Can I reserve and pick up?', 'Yes.' + (f' Orders are {S.READY.lower()}.' if S.READY else '') + f' We are at {S.STORE_ADDR}.')]
 def GUIDES(S):
+    mala_cta = ('<p><a class="btn" href="/shop/108-bead-malas/">Shop 108-bead malas</a></p>'
+                if S.catalog_link_available('/shop/108-bead-malas/') else
+                '<p><a class="btn" href="/shop/">Browse malas and meditation tools</a></p>')
     return [
      {'path': '/guide/how-to-use-a-mala/', 'title': 'How to Use a Mala: A Simple Step-by-Step Guide', 'desc': 'How to hold a mala, count 108 repetitions and use the guru bead, with tips for beginners.', 'h1': 'How to use a mala',
-      'html': '''<p class="lead">A mala keeps count so your mind can rest on the practice.</p><ol><li>Sit comfortably and choose a mantra, affirmation or simply your breath.</li><li>Hold the mala in your right hand, draped over the middle or ring finger. Many traditions avoid using the index finger.</li><li>Start at the bead next to the guru bead. With your thumb, draw one bead toward you for each repetition.</li><li>Continue around the strand for 108 repetitions.</li><li>When you reach the guru bead, pause. To continue, turn the mala and go back the other way rather than crossing it.</li></ol><h2>Short on time?</h2><p>Use a 27-bead wrist mala and go around four times for 108.</p><p><a class="btn" href="/shop/108-bead-malas/">Shop 108-bead malas</a></p>'''},
+      'html': '''<p class="lead">A mala keeps count so your mind can rest on the practice.</p><ol><li>Sit comfortably and choose a mantra, affirmation or simply your breath.</li><li>Hold the mala in your right hand, draped over the middle or ring finger. Many traditions avoid using the index finger.</li><li>Start at the bead next to the guru bead. With your thumb, draw one bead toward you for each repetition.</li><li>Continue around the strand for 108 repetitions.</li><li>When you reach the guru bead, pause. To continue, turn the mala and go back the other way rather than crossing it.</li></ol><h2>Short on time?</h2><p>Use a 27-bead wrist mala and go around four times for 108.</p>''' + mala_cta},
      {'path': '/guide/why-108-beads/', 'title': 'Why Do Malas Have 108 Beads?', 'desc': 'The traditional meanings of 108 in Hindu, Buddhist and yoga practice, and why wrist malas have 27 or 54 beads.', 'h1': 'Why 108 beads?',
       'html': '''<p class="lead">108 is a sacred number in several traditions, and the explanations vary.</p><ul><li>In Hindu traditions it appears in counts of names of deities and in Vedic cosmology.</li><li>In some Buddhist schools it is linked with 108 earthly desires or afflictions.</li><li>In yoga, 108 sun salutations are sometimes practiced at seasonal changes.</li></ul><p>Whatever the reason, 108 is long enough to settle into a practice. Wrist malas use 27 or 54 beads so that four or two rounds make 108.</p>'''},
      {'path': '/guide/choosing-a-mala/', 'title': 'Choosing a Mala: Stone, Rudraksha, Sandalwood or Wood', 'desc': 'How mala materials feel and wear, and how to choose bead size and length.', 'h1': 'Choosing a mala',
