@@ -25,6 +25,10 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install segno pillow
+      - name: Check storefront regressions without contacting checkout
+        run: |
+          python3 -m unittest discover -s tests
+          node --test tests/cart.test.cjs
       - name: Fetch catalog, pickup, best sellers; build namastebeadshop.com
         run: |
           mkdir -p data
@@ -32,6 +36,7 @@ jobs:
           python3 scripts/pickup.py
           python3 scripts/bestsellers.py || echo "best-seller order unavailable; building without it"
           python3 scripts/build.py --site=https://namastebeadshop.com
+          python3 scripts/check_site.py
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
